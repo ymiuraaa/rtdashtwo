@@ -1,9 +1,10 @@
-// app/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
+import { Card, CardContent } from '@/components/ui/card';
+import OdometryPlot from '@/components/odometry/OdometryPlot';
+import { useDynamicChartOptions } from '@/components/useDynamicChartOptions';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -13,11 +14,14 @@ import {
   CategoryScale,
   Legend,
   Tooltip,
+  Filler,
 } from 'chart.js';
+
+ChartJS.register(Filler);
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Legend, Tooltip);
 
-const ThreeImuViewer = dynamic(() => import('@/components/ThreeImuViewer'), { ssr: false });
+const ThreeImuViewer = dynamic(() => import('@/components/odometry/ThreeImuViewer'), { ssr: false });
 
 export default function Dashboard() {
   const [gyro, setGyro] = useState([0, 0, 0]);
@@ -26,11 +30,7 @@ export default function Dashboard() {
   const [pwm1Data, setPwm1Data] = useState<number[]>([]);
   const [pwm2Data, setPwm2Data] = useState<number[]>([]);
   const [imuRotation, setImuRotation] = useState({ roll: 0, pitch: 0, yaw: 0 });
-  const [imuHistory, setImuHistory] = useState<{ accel: number[][]; gyro: number[][]; mag: number[][] }>({
-    accel: [],
-    gyro: [],
-    mag: [],
-  });
+  const [odomPath, setOdomPath] = useState<{ x: number; y: number }[]>([]);
   const maxPoints = 50;
 
   useEffect(() => {
@@ -46,18 +46,18 @@ export default function Dashboard() {
           pitch: data.pitch,
           yaw: data.yaw,
         });
-        setImuHistory((prev) => ({
-          accel: [...prev.accel.slice(-maxPoints + 1), data.accel],
-          gyro: [...prev.gyro.slice(-maxPoints + 1), data.gyro],
-          mag: [...prev.mag.slice(-maxPoints + 1), data.mag],
-        }));
       } else if (data.type === 'pwm') {
         setPwm1Data((prev) => [...prev.slice(-maxPoints + 1), data.pwm1]);
         setPwm2Data((prev) => [...prev.slice(-maxPoints + 1), data.pwm2]);
+        
+      } else if (data.type === 'odom') {
+        setOdomPath((prev) => [...prev, { x: data.x, y: data.y }]);
       }
     };
     return () => socket.close();
   }, []);
+
+  const pwmChartOptions = useDynamicChartOptions('pwm');
 
   const pwmChartData = (label: string, data: number[]) => ({
     labels: data.map((_, i) => i),
@@ -71,68 +71,6 @@ export default function Dashboard() {
       },
     ],
   });
-
-  const imuChartData = {
-    labels: imuHistory.accel.map((_, i) => i),
-    datasets: [
-      {
-        label: 'Accel X',
-        data: imuHistory.accel.map((v) => v[0]),
-        borderColor: 'red',
-      },
-      {
-        label: 'Accel Y',
-        data: imuHistory.accel.map((v) => v[1]),
-        borderColor: 'orange',
-      },
-      {
-        label: 'Accel Z',
-        data: imuHistory.accel.map((v) => v[2]),
-        borderColor: 'yellow',
-      },
-      {
-        label: 'Gyro X',
-        data: imuHistory.gyro.map((v) => v[0]),
-        borderColor: 'green',
-      },
-      {
-        label: 'Gyro Y',
-        data: imuHistory.gyro.map((v) => v[1]),
-        borderColor: 'blue',
-      },
-      {
-        label: 'Gyro Z',
-        data: imuHistory.gyro.map((v) => v[2]),
-        borderColor: 'purple',
-      },
-      {
-        label: 'Mag X',
-        data: imuHistory.mag.map((v) => v[0]),
-        borderColor: 'brown',
-      },
-      {
-        label: 'Mag Y',
-        data: imuHistory.mag.map((v) => v[1]),
-        borderColor: 'grey',
-      },
-      {
-        label: 'Mag Z',
-        data: imuHistory.mag.map((v) => v[2]),
-        borderColor: 'black',
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        min: 0,
-        max: 255,
-      },
-    },
-  };
 
   return (
     <main className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -162,28 +100,32 @@ export default function Dashboard() {
       </Card>
       <Card className="col-span-1 md:col-span-1 xl:col-span-1">
         <CardContent className="flex flex-col items-center justify-center h-[400px]">
-          <h2 className="text-xl font-bold mb-4 text-center">3D IMU Model (Three.js)</h2>
+          <h2 className="text-xl font-bold mb-4 text-center">IMU orientation (Visualized)</h2>
           <div className="w-[300px] h-full">
             <ThreeImuViewer rotation={imuRotation} />
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshStandardMaterial color="red" />
+            </mesh>
           </div>
         </CardContent>
       </Card>
       <Card className="col-span-1 md:col-span-2">
-        <CardContent className="h-64">
-          <h2 className="text-xl font-bold mb-2">IMU Sensor Data</h2>
-          <Line data={imuChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+        <CardContent className="h-[50vh] flex flex-col items-center justify-center">
+          <h2 className="text-xl font-bold mb-4 text-center">2D Odometry (local frame)</h2>
+          <OdometryPlot path={odomPath} />
         </CardContent>
       </Card>
       <Card className="col-span-1 md:col-span-2">
-        <CardContent className="h-64">
-          <h2 className="text-xl font-bold mb-2">DRV8833 Motor PWM</h2>
-          <Line data={pwmChartData('PWM1 (DRV8833)', pwm1Data)} options={chartOptions} />
+        <CardContent className="h-[40vh] md:h-[45vh] xl:h-[50vh]">
+          <h2 className="text-xl font-bold mb-2">Motor 1 PWM signal</h2>
+          <Line data={pwmChartData('PWM1', pwm1Data)} options={pwmChartOptions} />
         </CardContent>
       </Card>
       <Card className="col-span-1 md:col-span-2">
-        <CardContent className="h-64">
-          <h2 className="text-xl font-bold mb-2">Servo PWM</h2>
-          <Line data={pwmChartData('PWM2 (Servo)', pwm2Data)} options={chartOptions} />
+        <CardContent className="h-[40vh] md:h-[45vh] xl:h-[50vh]">
+          <h2 className="text-xl font-bold mb-2">Motor 2 PWM</h2>
+          <Line data={pwmChartData('PWM2', pwm2Data)} options={pwmChartOptions} />
         </CardContent>
       </Card>
     </main>
