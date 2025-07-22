@@ -1,6 +1,21 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/"                # root of project
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "06:00"               # UTC time
+    open-pull-requests-limit: 5   # prevent PR spam
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "chore"
+    allow:
+      - dependency-type: "all"
+
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
