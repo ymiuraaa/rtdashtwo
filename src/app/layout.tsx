@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from 'next-themes';
 import Header from '@/components/Header';
+import type { ReactNode } from 'react';
+
+// import { Geist, Geist_Mono } from "next/font/google";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -19,7 +21,11 @@ export const metadata: Metadata = {
   description: "Dashboards for robots made with MCUs",
 };
 
-export default function RootLayout({ children }) {
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
