@@ -1,16 +1,20 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/"                # root of project
+    directory: "/"
     schedule:
       interval: "daily"
-      time: "06:00"               # UTC time
-    open-pull-requests-limit: 5   # prevent PR spam
+      time: "06:00"
+    open-pull-requests-limit: 5
     rebase-strategy: "auto"
     commit-message:
       prefix: "chore"
     allow:
       - dependency-type: "all"
+
+    ignore:
+      - dependency-name: "three"
+        versions: [">0.172.0"]
 
     groups:
       minor-and-patch:
