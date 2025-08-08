@@ -16,10 +16,6 @@ function ImuModel({ rotation }: { rotation: Rotation }) {
   const { scene } = useGLTF('/imu.gltf');
 
   React.useEffect(() => {
-
-    // model source: https://grabcad.com/library/sparkfun-9dof-imu-breakout-icm-20948-qwiic-1
-
-    // I should learn how to put textures in blender to make this look a bit more professional
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
@@ -30,7 +26,6 @@ function ImuModel({ rotation }: { rotation: Rotation }) {
     const center = box.getCenter(new THREE.Vector3());
     
     scene.position.sub(center);
-    
     scene.rotation.x = -Math.PI / 2;
   }, [scene]);
 
@@ -47,15 +42,14 @@ function ImuModel({ rotation }: { rotation: Rotation }) {
   );
 }
 
-
-
+// Main ThreeImuViewer component
 export default function ThreeImuViewer({ rotation }: { rotation: Rotation }) {
   return (
     <Canvas
       style={{ width: '120%', height: '100%' }}
       camera={{ position: [1, 1, 1], fov: 60 }}
     >
-      <ambientLight intensity={0.7} />
+    <ambientLight intensity={0.7} />
       <directionalLight position={[10, 10, 5]} intensity={1.5} />
       <Suspense fallback={null}>
         <ImuModel rotation={rotation} />
