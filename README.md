@@ -25,7 +25,6 @@
 **RT-DashTwo** is a real-time robotics dashboard built with [Next.js](https://nextjs.org/), [Three.js](https://threejs.org/), and WebSockets to visualize IMU data, odometry, and sensor fusion outputs from an ESP32-based embedded system.  
 It uses [D3.js](https://d3js.org/) for plotting, [Tailwind CSS](https://tailwindcss.com/) for styling, and [TypeScript](https://www.typescriptlang.org/) for type safety.
 
----
 
 ### Built With
 
@@ -52,28 +51,22 @@ To get a local copy of the project up and running on your machine, follow these 
 ### Installation
 
 1. Clone the repo
-   ```sh
+```sh
    git clone https://github.com/ymiuraaa/rtdashtwo.git
    cd rtdashtwo
-````
+```
 
 2. Install dependencies
 
-   ```sh
+```sh
    npm install
-   ```
+```
 
-3. Start the WebSocket server
+3. Run the dashboard
 
-   ```sh
-   node socket-server.js
-   ```
-
-4. Run the dashboard
-
-   ```sh
+```sh
    npm run dev
-   ```
+```
 
 ---
 
