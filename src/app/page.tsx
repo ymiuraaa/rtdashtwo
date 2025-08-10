@@ -27,18 +27,29 @@ export default function Dashboard() {
   const maxPoints = 50;
 
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:8080');
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'pwm') {
-        setPwm1Data((prev) => [...prev.slice(-maxPoints + 1), data.pwm1]);
-        setPwm2Data((prev) => [...prev.slice(-maxPoints + 1), data.pwm2]);
-      } else if (data.type === 'odom') {
-        setOdomPath((prev) => [...prev, { x: data.x, y: data.y }]);
-      }
-    };
-    return () => socket.close();
-  }, []);
+  // Use same host as current page unless overridden by env
+  const host =
+    process.env.NEXT_PUBLIC_WS_HOST ??
+    (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
+  const socket = new WebSocket(`ws://${host}:8080`);
+
+
+  socket.onopen = () => console.log('WS open');
+  socket.onerror = (e) => console.error('WS error', e);
+  socket.onclose = () => console.log('WS close');
+
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'pwm') {
+      setPwm1Data((prev) => [...prev.slice(-maxPoints + 1), data.pwm1]);
+      setPwm2Data((prev) => [...prev.slice(-maxPoints + 1), data.pwm2]);
+    } else if (data.type === 'odom') {
+      setOdomPath((prev) => [...prev, { x: data.x, y: data.y }]);
+    }
+  };
+
+  return () => socket.close();
+}, []);
 
   const pwmChartOptions = useDynamicChartOptions('pwm');
 
@@ -60,7 +71,7 @@ export default function Dashboard() {
       <ImuViewerCard />
       <Card className="col-span-1">
         <CardContent className="h-[400px] flex flex-col items-center justify-center">
-          <h2 className="text-xl font-bold mb-4 text-center">2D Odometry (local frame)</h2>
+          <h2 className="text-xl font-bold mb-4 text-center">2D Odometry</h2>
           <OdometryPlot path={odomPath} />
         </CardContent>
       </Card>
@@ -70,12 +81,16 @@ export default function Dashboard() {
           <Line data={pwmChartData('PWM1', pwm1Data)} options={pwmChartOptions} />
         </CardContent>
       </Card>
+      {/* 
+
+      maybe turn this part into a visualization of the servo angles
+      
       <Card className="col-span-1 md:col-span-2">
         <CardContent className="h-[40vh] md:h-[45vh] xl:h-[50vh]">
           <h2 className="text-xl font-bold mb-2">Motor 2 PWM</h2>
           <Line data={pwmChartData('PWM2', pwm2Data)} options={pwmChartOptions} />
         </CardContent>
-      </Card>
+      </Card> */}
     </main>
   );
 }

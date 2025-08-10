@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "monthly"
       time: "06:00"
     open-pull-requests-limit: 5
     rebase-strategy: "auto"
@@ -20,6 +20,7 @@ updates:
       minor-and-patch:
         patterns:
           - "*"
+          - "!@google/model-viewer"
         update-types:
           - "minor"
           - "patch"
