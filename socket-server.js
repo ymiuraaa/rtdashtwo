@@ -1,15 +1,15 @@
 const { WebSocketServer } = require('ws');
 
 const wss = new WebSocketServer({ host: '0.0.0.0', port: 8080 }, () => {
-  console.log('WS server on port 8080');
+  console.log('ws server on port 8080');
 });
 
-// simple heartbeat to cull dead connections (mobile hotspot can drop silently)
+// simple heartbeat to cull dead connections
 function heartbeat() { this.isAlive = true; }
 
 wss.on('connection', (ws, req) => {
   const ip = req.socket.remoteAddress;
-  console.log(`🔌 Client connected: ${ip}`);
+  console.log(`client connected: ${ip}`);
   ws.isAlive = true;
   ws.on('pong', heartbeat);
 
@@ -23,7 +23,7 @@ wss.on('connection', (ws, req) => {
       try {
         const d = JSON.parse(text);
 
-        // If ESP sends flat IMU, wrap it
+        // if ESP sends flat IMU, wrap it
         if (['ax','ay','az','gx','gy','gz'].every(k => k in d)) {
           out = JSON.stringify({
             type: 'imu',
@@ -34,28 +34,27 @@ wss.on('connection', (ws, req) => {
             yaw: Number(d.yaw) || 0,
           });
         } else {
-          // Otherwise, re-broadcast the parsed JSON as-is
           out = JSON.stringify(d);
         }
       } catch {
-        // not JSON — just fan it out
+        // not JSON - just fan it out
       }
     }
 
-    // Broadcast to everyone (including sender; UI is fine with echoes)
+    // broadcast to everyone (including sender; UI is fine with echoes)
     wss.clients.forEach(c => {
       if (c.readyState === c.OPEN) c.send(out, { binary: isBinary });
     });
   });
 
-  ws.on('close', () => console.log(`🔌 Client disconnected: ${ip}`));
+  ws.on('close', () => console.log('client disconnected: ${ip}'));
 });
 
 // ping every 15s; drop if no pong in 30s
 const interval = setInterval(() => {
   wss.clients.forEach(ws => {
     if (ws.isAlive === false) {
-      console.log('⚠️  Terminating stale client');
+      console.log('uh oh... terminating stale client');
       return ws.terminate();
     }
     ws.isAlive = false;

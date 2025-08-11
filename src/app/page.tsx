@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import OdometryPlot from '@/components/odometry/OdometryPlot';
 import { useDynamicChartOptions } from '@/components/useDynamicChartOptions';
 import { Line } from 'react-chartjs-2';
-import ImuViewerCard from '@/components/odometry/ImuViewerCard';
+import ImuViewerCard from '@/components/imu/ImuViewerCard';
 import {
   Chart as ChartJS,
   LineElement,

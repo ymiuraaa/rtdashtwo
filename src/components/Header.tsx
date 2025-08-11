@@ -13,8 +13,8 @@ export default function Header() {
   return (
     <header className="w-full px-6 py-4 flex justify-between items-center border-b border-zinc-800 bg-background-light dark:bg-background-dark">
       <nav className="flex gap-6 items-center text-sm font-medium">
-        <Link href="/" className="hover:text-primary">Odom</Link>
         <Link href="/calibration" className="hover:text-primary">Calibration</Link>
+        <Link href="/" className="hover:text-primary">Telemetry</Link>
         <Link href="https://github.com/ymiuraaa/RT-DashTwo" className="hover:text-primary">Source Code</Link>
       </nav>
       {mounted && (

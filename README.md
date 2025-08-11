@@ -28,14 +28,9 @@ It uses [D3.js](https://d3js.org/) for plotting, [Tailwind CSS](https://tailwind
 
 ### Built With
 
-<a href="https://nextjs.org/" target="__blank"><img alt="NextJS" src="https://img.shields.io/badge/next%20js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white"/></a>  
-<a href="https://react.dev/" target="__blank"><img alt="React" src="https://img.shields.io/badge/react-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/></a>  
-<a href="https://www.typescriptlang.org/" target="__blank"><img alt="TypeScript" src="https://img.shields.io/badge/typescript-007ACC?style=for-the-badge&logo=typescript&logoColor=white"/></a>  
-<a href="https://threejs.org/" target="__blank"><img alt="ThreeJS" src="https://img.shields.io/badge/threejs-black?style=for-the-badge&logo=three.js&logoColor=white"/></a>  
-<a href="https://d3js.org/" target="__blank"><img alt="D3.js" src="https://img.shields.io/badge/d3.js-F9A03C?style=for-the-badge&logo=d3dotjs&logoColor=white"/></a>  
-<a href="https://tailwindcss.com/" target="__blank"><img alt="TailwindCSS" src="https://img.shields.io/badge/tailwindcss-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white"/></a>  
-<a href="https://nodejs.org/" target="__blank"><img alt="Node.js" src="https://img.shields.io/badge/node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white"/></a>  
-<a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="__blank"><img alt="WebSockets" src="https://img.shields.io/badge/websockets-35495E?style=for-the-badge&logo=websocket&logoColor=white"/></a>  
+<a href="https://nextjs.org/" target="__blank"><img alt="NextJS" src="https://img.shields.io/badge/next%20js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white"/></a><a href="https://react.dev/" target="__blank"><img alt="React" src="https://img.shields.io/badge/react-20232A?style=for-the-badge&logo=react&logoColor=61DAFB"/></a><a href="https://www.typescriptlang.org/" target="__blank"><img alt="TypeScript" src="https://img.shields.io/badge/typescript-007ACC?style=for-the-badge&logo=typescript&logoColor=white"/></a><a href="https://threejs.org/" target="__blank"><img alt="ThreeJS" src="https://img.shields.io/badge/threejs-black?style=for-the-badge&logo=three.js&logoColor=white"/></a>
+<a href="https://d3js.org/" target="__blank"><img alt="D3.js" src="https://img.shields.io/badge/d3.js-F9A03C?style=for-the-badge&logo=d3dotjs&logoColor=white"/></a><a href="https://tailwindcss.com/" target="__blank"><img alt="TailwindCSS" src="https://img.shields.io/badge/tailwindcss-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white"/></a><a href="https://nodejs.org/" target="__blank"><img alt="Node.js" src="https://img.shields.io/badge/node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white"/></a><a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API" target="__blank"><img alt="WebSockets" src="https://img.shields.io/badge/websockets-35495E?style=for-the-badge&logo=websocket&logoColor=white"/></a>
+
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -78,7 +73,7 @@ To get a local copy of the project up and running on your machine, follow these 
 
 ---
 
-## Project Structure
+## Project Structure (tentative but graphs and imu probably won't change for a while)
 
 ```sh
 src
@@ -91,10 +86,15 @@ components
 │   ├── colors.ts
 │   ├── index.tsx
 │   └── types.ts
-├── odometry
+├── imu
 │   ├── ImuViewerCard.tsx
-│   ├── OdometryPlot.tsx
 │   └── ThreeImuViewer.tsx
+├── odometry
+│   ├── OdometryPlot.tsx
+│   └── index.tsx
+├── motors
+│   ├── PwmPlot.tsx
+│   └── index.tsx
 ├── ui
 │   ├── button.tsx
 │   ├── card.tsx

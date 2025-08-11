@@ -17,7 +17,7 @@ useEffect(() => {
     (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
   const socket = new WebSocket(`ws://${host}:8080`);
 
-  // Complementary filter state (radians)
+  // complementary filter state (radians)
   let r = 0, p = 0, y = 0;
   let lastT = performance.now() / 1000;
   const alpha = 0.98; // gyro vs accel blend
