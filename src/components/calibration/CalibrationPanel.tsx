@@ -10,10 +10,44 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import D3TimeSeries from "@/components/graphs"; // same API as in ImuViewerCard
+import D3TimeSeries from "@/components/graphs"; // uses your graphs index default export
 import { useEspWs } from "@/lib/useEspWs";
 
-type Target = "accel_x" | "accel_x-" | "accel_y" | "accel_y-" |"accel_z" | "accel_z-" | "gyro" | "mag" ;
+// ---- local types (no extra files) ----
+type Target = "accel_x" | "accel_y" | "accel_z" | "gyro" | "mag" | "all";
+type ImuTriple = { x: number; y: number; z: number };
+type StreamImuEvent = {
+  evt: "STREAM_IMU";
+  accel_x?: ImuTriple;
+  accel_y?: ImuTriple;
+  accel_z?: ImuTriple;
+  gyro?: ImuTriple;
+  mag?: ImuTriple;
+  all?: ImuTriple;
+};
+type EspEvent =
+  | StreamImuEvent
+  | { evt: "CAL_PROGRESS"; pct?: number }
+  | {
+      evt: "CAL_RESULT";
+      gyro_bias?: [number, number, number];
+      accel_bias?: [number, number, number];
+      accel_scale?: [number, number, number];
+    }
+  | { evt: "CAL_CANCELED" }
+  | { evt: "CAL_ABORTED" }
+  | { evt: "CAL_ERROR"; message?: string };
+
+const isImuTriple = (v: unknown): v is ImuTriple => {
+  if (!v || typeof v !== "object") return false;
+  const r = v as Record<string, unknown>;
+  return (
+    typeof r.x === "number" &&
+    typeof r.y === "number" &&
+    typeof r.z === "number"
+  );
+};
+// --------------------------------------
 
 export default function CalibrationPanel() {
   const { ready, send, subscribe } = useEspWs();
@@ -26,20 +60,23 @@ export default function CalibrationPanel() {
   >([]);
 
   useEffect(() => {
-    return subscribe((msg: any) => {
-      if (msg.evt === "STREAM_IMU" && msg[target]) {
+    return subscribe((msg: EspEvent) => {
+      if (msg.evt === "STREAM_IMU") {
+        const maybe = (msg as Record<string, unknown>)[target];
+        if (!isImuTriple(maybe)) return;
         const now = performance.now();
-        const { x, y, z } = msg[target];
+        const { x, y, z } = maybe;
         setSeries((old) => {
           const next = [...old, { t: now, x, y, z }];
           if (next.length > 800) next.shift();
           return next;
         });
+        return;
       }
       if (msg.evt === "CAL_PROGRESS") setStatus(`collecting… ${msg.pct ?? 0}%`);
       if (msg.evt === "CAL_RESULT") {
         setStatus("done");
-        if (msg.gyro_bias && (target === "gyro"))
+        if (msg.gyro_bias && (target === "gyro" || target === "all"))
           setBias(msg.gyro_bias);
         if (msg.accel_bias && target.startsWith("accel"))
           setBias(msg.accel_bias);
@@ -57,44 +94,36 @@ export default function CalibrationPanel() {
   };
   const cancel = () => send({ cmd: "CAL_CANCEL" });
   const save = () => {
-    send({ cmd: "SET_CAL_REQUEST" }); // or send explicit biases
+    send({ cmd: "SET_CAL_REQUEST" });
     setStatus("save requested");
   };
 
-  // Decide which axes to render for the selected calibration target
+  // Which axes to draw for this target
   const seriesOrder = useMemo<("x" | "y" | "z")[]>(() => {
     switch (target) {
       case "accel_x":
         return ["x"];
-      case "accel_x-":
-        return ["x"];
       case "accel_y":
-        return ["y"];
-      case "accel_y-":
         return ["y"];
       case "accel_z":
         return ["z"];
-      case "accel_z-":
-        return ["z"];
-      // For gyro or mag: show all three axes
       default:
-        return ["x", "y", "z"];
+        return ["x", "y", "z"]; // gyro, mag, all
     }
   }, [target]);
 
-  // latest sample to D3TimeSeries (internal)
   const latest = series.length
     ? series[series.length - 1]
     : { x: 0, y: 0, z: 0 };
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[220px,1fr] items-start">
+      {/* Controls */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>WebSocket</span>
           <span>{ready ? "connected" : "offline"}</span>
         </div>
-        
 
         <div className="space-y-1">
           <Label htmlFor="target">Target</Label>
@@ -103,14 +132,12 @@ export default function CalibrationPanel() {
               <SelectValue placeholder="Select axis/sensor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="accel_x">Accel +X</SelectItem>
-              <SelectItem value="accel_x-">Accel -X</SelectItem>
-              <SelectItem value="accel_y">Accel +Y</SelectItem>
-              <SelectItem value="accel_y-">Accel -Y</SelectItem>
-              <SelectItem value="accel_z">Accel +Z</SelectItem>
-              <SelectItem value="accel_z-">Accel -Z</SelectItem>
+              <SelectItem value="accel_x">Accel X</SelectItem>
+              <SelectItem value="accel_y">Accel Y</SelectItem>
+              <SelectItem value="accel_z">Accel Z</SelectItem>
               <SelectItem value="gyro">Gyroscope</SelectItem>
               <SelectItem value="mag">Magnetometer</SelectItem>
+              <SelectItem value="all">All</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -143,7 +170,7 @@ export default function CalibrationPanel() {
         </Button>
       </div>
 
-      {/* Graph column */}
+      {/* Graph */}
       <div className="rounded-md border bg-muted p-3">
         <D3TimeSeries
           key={target} // reset internal buffer when target changes

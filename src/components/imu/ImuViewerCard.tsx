@@ -19,7 +19,7 @@ export default function ImuViewerCard({
   alpha,
   autoComputeRPY,
 }: Props) {
-  const { accel, gyro, rotation, connected, lastMessageAt } = useImuStream({
+  const { accel, gyro, rotation} = useImuStream({
     url: wsUrl ?? getDefaultImuWsUrl(),
     alpha,
     autoComputeRPY,

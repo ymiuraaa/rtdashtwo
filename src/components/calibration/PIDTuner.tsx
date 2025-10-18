@@ -44,8 +44,11 @@ export default function PIDTuner({ initialP = 0, initialI = 0, initialD = 0 }: P
         const errText = await res.text();
         setStatus(`Failed to update PID: ${errText}`);
       }
-    } catch (error: any) {
-      setStatus(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setStatus(`Error: ${error.message}`);
+      }
+      setStatus(`Error: ${error}`);
     }
   };
 

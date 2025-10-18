@@ -20,8 +20,8 @@ export default function CalibrateControls() {
         const err = await res.text();
         setMessage(`Calibration failed: ${err}`);
       }
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      setMessage(`Error: ${error}`);
     }
   }
 
