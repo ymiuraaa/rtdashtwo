@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import {Canvas, useFrame} from '@react-three/fiber';
 import { OrbitControls, useGLTF} from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -42,7 +42,7 @@ function ImuModel({ rotation }: { rotation: Rotation }) {
   );
 }
 
-// Main ThreeImuViewer component
+// main ThreeImuViewer component
 export default function ThreeImuViewer({ rotation }: { rotation: Rotation }) {
   return (
     <Canvas

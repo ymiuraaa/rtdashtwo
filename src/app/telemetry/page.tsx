@@ -1,7 +1,5 @@
 'use client';
 
-// let's reroute this to telemetry/calibration at one point
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import OdometryPlot from '@/components/odometry/OdometryPlot';
@@ -43,7 +41,7 @@ export default function Dashboard() {
     if (data.type === 'pwm') {
       setPwm1Data((prev) => [...prev.slice(-maxPoints + 1), data.pwm1]);
     } else if (data.type === 'odom') {
-      // TODO: let's remove odom and show a speedometer instead
+      // figure out odom with encoder + IMU later
       setOdomPath((prev) => [...prev, { x: data.x, y: data.y }]);
     }
   };

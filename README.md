@@ -20,8 +20,6 @@
   <h1><em>RT-DashTwo</em></h1>
 </div>
 
-<!-- ABOUT THE PROJECT -->
-
 **RT-DashTwo** is a real-time robotics dashboard built with [Next.js](https://nextjs.org/), [Three.js](https://threejs.org/), and WebSockets to visualize IMU data, odometry, and sensor fusion outputs from an ESP32-based embedded system.  
 It uses [D3.js](https://d3js.org/) for plotting, [Tailwind CSS](https://tailwindcss.com/) for styling, and [TypeScript](https://www.typescriptlang.org/) for type safety.
 
