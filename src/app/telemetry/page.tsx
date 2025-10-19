@@ -66,7 +66,7 @@ export default function Dashboard() {
 
   return (
     <main className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      <ImuViewerCard />
+      <ImuViewerCard /* wsUrl="ws://192.168.0.10:8080" alpha={0.98} autoComputeRPY */ />
       <Card className="col-span-1">
         <CardContent className="h-[400px] flex flex-col items-center justify-center">
           <h2 className="text-xl font-bold mb-4 text-center">2D Odometry</h2>

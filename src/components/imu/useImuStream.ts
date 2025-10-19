@@ -1,23 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
 export type ImuVec3 = [number, number, number];
 export type ImuRPY = { roll: number; pitch: number; yaw: number };
 
 export type ImuHookOptions = {
   url?: string;
-  
   alpha?: number;
-
   autoComputeRPY?: boolean;
-
   onError?: (e: unknown) => void;
 };
 
 export function getDefaultImuWsUrl(): string {
+  const envHost = process.env.NEXT_PUBLIC_WS_HOST;
   const host =
-    (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_WS_HOST) ||
+    envHost ||
     (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
 
   const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
@@ -32,11 +30,17 @@ function isFiniteNum(v: unknown): v is number {
 
 export function useImuStream(opts: ImuHookOptions = {}) {
   const {
-    url = getDefaultImuWsUrl(),
+    url: urlArg,
     alpha = 0.98,
     autoComputeRPY = true,
     onError,
   } = opts;
+
+  // freezing URL for the life of the component unless the caller *explicitly* changes it.
+  const url = useMemo(() => urlArg ?? getDefaultImuWsUrl(), [urlArg]);
+
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
   const [accel, setAccel] = useState<ImuVec3>([0, 0, 0]);
   const [gyro, setGyro] = useState<ImuVec3>([0, 0, 0]);
@@ -44,23 +48,29 @@ export function useImuStream(opts: ImuHookOptions = {}) {
   const [connected, setConnected] = useState(false);
   const [lastMessageAt, setLastMessageAt] = useState<number | null>(null);
 
-  // complementary filter integrator state (radians) stored in refs to avoid stale closures
-  const rpyRef = useRef<{ r: number; p: number; y: number }>({ r: 0, p: 0, y: 0 });
-  const lastTRef = useRef<number>(0);
+  const rpyRef = useRef({ r: 0, p: 0, y: 0 });
+  const lastTRef = useRef(0);
 
   useEffect(() => {
     let socket: WebSocket | null = null;
-
     try {
+      // debug logs to uncomment here
+      // console.info('[IMU] connecting to', url);
       socket = new WebSocket(url);
     } catch (e) {
-      onError?.(e);
+      onErrorRef.current?.(e);
       return;
     }
 
-    socket.onopen = () => setConnected(true);
-    socket.onclose = () => setConnected(false);
-    socket.onerror = (e) => onError?.(e);
+    socket.onopen = () => {
+      setConnected(true);
+      // console.info('[IMU] open', url);
+    };
+    socket.onclose = () => {
+      setConnected(false);
+      // console.info('[IMU] close');
+    };
+    socket.onerror = (e) => onErrorRef.current?.(e);
 
     socket.onmessage = (event) => {
       try {
@@ -73,7 +83,6 @@ export function useImuStream(opts: ImuHookOptions = {}) {
         const gx = Number(d?.gyro?.[0]);
         const gy = Number(d?.gyro?.[1]);
         const gz = Number(d?.gyro?.[2]);
-
         if (![ax, ay, az, gx, gy, gz].every(isFiniteNum)) return;
 
         setAccel([ax, ay, az]);
@@ -91,7 +100,6 @@ export function useImuStream(opts: ImuHookOptions = {}) {
           const pitch = Number(d.pitch);
           const yaw = Number(d.yaw);
           setRotation({ roll, pitch, yaw });
-          // keep integrator roughly in sync to minimize jumps if autoCompute toggles later
           rpyRef.current = { r: roll, p: pitch, y: yaw };
           lastTRef.current = performance.now() / 1000;
           return;
@@ -99,13 +107,11 @@ export function useImuStream(opts: ImuHookOptions = {}) {
 
         if (!autoComputeRPY) return;
 
-        // complementary filter path (compute roll/pitch from accel, integrate gyro)
         const now = performance.now() / 1000;
         const prev = lastTRef.current || now;
         const dt = Math.max(0.001, Math.min(0.1, now - prev));
         lastTRef.current = now;
 
-        // gyro: deg/s --> rad/s
         const gxRad = (gx * Math.PI) / 180;
         const gyRad = (gy * Math.PI) / 180;
         const gzRad = (gz * Math.PI) / 180;
@@ -115,7 +121,6 @@ export function useImuStream(opts: ImuHookOptions = {}) {
         p += gyRad * dt;
         y += gzRad * dt;
 
-        // accel-based angles (assuming small angles; gravity aligned)
         const rollAcc = Math.atan2(ay, az);
         const pitchAcc = Math.atan2(-ax, Math.hypot(ay, az));
 
@@ -125,24 +130,17 @@ export function useImuStream(opts: ImuHookOptions = {}) {
         rpyRef.current = { r, p, y };
         setRotation({ roll: r, pitch: p, yaw: y });
       } catch (e) {
-        onError?.(e);
+        onErrorRef.current?.(e);
       }
     };
 
     return () => {
       try {
         socket?.close();
-      } catch {
-        // no op for now
-      }
+      } catch {}
     };
-  }, [url, alpha, autoComputeRPY, onError]);
+    // IMPORTANT: do NOT include onError in deps; it changes identity every render.
+  }, [url, alpha, autoComputeRPY]);
 
-  return {
-    accel,
-    gyro,
-    rotation,
-    connected,
-    lastMessageAt,
-  };
+  return { accel, gyro, rotation, connected, lastMessageAt };
 }

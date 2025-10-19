@@ -23,7 +23,7 @@ export default function ImuViewerCard({
     url: wsUrl ?? getDefaultImuWsUrl(),
     alpha,
     autoComputeRPY,
-    onError: (e) => console.error('IMU stream error:', e),
+    // onError: (e) => console.error('IMU stream error:', e),
   });
 
   return (
